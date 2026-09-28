@@ -1,0 +1,33 @@
+[project]
+name = "audio-lang-tools"
+version = "0.1.0"
+description = "Machine checks for text-to-speech clips in tonal languages: file faults, words, and tones, with a benchmark that measures them."
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "numpy",
+  "torch==2.5.1",
+  "torchaudio==2.5.1",
+  "torchcrepe>=0.0.23",
+  "scikit-learn>=1.5",
+  "pycantonese>=3.4",
+  "requests",
+]
+
+[project.scripts]
+altools = "audio_lang_tools.cli:main"
+
+[dependency-groups]
+dev = ["pytest", "matplotlib"]
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+torchaudio = { index = "pytorch-cpu" }
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

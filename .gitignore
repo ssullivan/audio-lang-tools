@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+# Keys live in ~/.config/audio-lang-tools/config.env, never here.
+*.env

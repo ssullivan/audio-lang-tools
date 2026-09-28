@@ -1,0 +1,96 @@
+[
+ {
+  "id": "daughter-minimax",
+  "file": "daughter-minimax.mp3",
+  "text": "女",
+  "jyutping": "neoi2",
+  "voice": "minimax:Cantonese_ProfessionalHost（F)",
+  "expect": "pass",
+  "why": "MiniMax take whose pitch dips and rises (167→254 Hz): the old checker flagged it"
+ },
+ {
+  "id": "gam-nin-minimax",
+  "file": "gam-nin-minimax.mp3",
+  "text": "今年",
+  "jyutping": "gam1 nin2",
+  "voice": "minimax:Cantonese_ProfessionalHost（F)",
+  "expect": "pass",
+  "why": "MiniMax says nin2, which Azure cannot"
+ },
+ {
+  "id": "mum",
+  "file": "mum.mp3",
+  "text": "媽媽",
+  "jyutping": "maa4 maa1",
+  "voice": "zh-HK-HiuMaanNeural",
+  "expect": "pass"
+ },
+ {
+  "id": "gam-jat",
+  "file": "gam-jat.mp3",
+  "text": "今日",
+  "jyutping": "gam1 jat6",
+  "voice": "zh-HK-HiuMaanNeural",
+  "expect": "pass"
+ },
+ {
+  "id": "kam-jat",
+  "file": "kam-jat.mp3",
+  "text": "琴日",
+  "jyutping": "kam4 jat6",
+  "voice": "zh-HK-HiuMaanNeural",
+  "expect": "pass"
+ },
+ {
+  "id": "peng",
+  "file": "peng.mp3",
+  "text": "平",
+  "jyutping": "peng4",
+  "voice": "zh-HK-HiuMaanNeural",
+  "expect": "pass"
+ },
+ {
+  "id": "daughter-azure",
+  "ssml": "女",
+  "text": "女",
+  "jyutping": "neoi2",
+  "voice": "zh-HK-HiuMaanNeural",
+  "expect": "flag",
+  "why": "Azure reads 女 alone as neoi5"
+ },
+ {
+  "id": "gam-nin-azure",
+  "ssml": "今年",
+  "text": "今年",
+  "jyutping": "gam1 nin2",
+  "voice": "zh-HK-HiuMaanNeural",
+  "expect": "flag",
+  "why": "Azure reads 年 as nin4 whatever it is told"
+ },
+ {
+  "id": "kam-jat-as-gam-jat",
+  "ssml": "琴日",
+  "text": "今日",
+  "jyutping": "gam1 jat6",
+  "voice": "zh-HK-HiuMaanNeural",
+  "expect": "flag",
+  "why": "琴日 (yesterday) where 今日 (today) was wanted"
+ },
+ {
+  "id": "gam-jat-as-kam-jat",
+  "ssml": "今日",
+  "text": "琴日",
+  "jyutping": "kam4 jat6",
+  "voice": "zh-HK-HiuMaanNeural",
+  "expect": "flag"
+ },
+ {
+  "id": "maai6-as-maai5",
+  "ssml": "賣",
+  "text": "買",
+  "jyutping": "maai5",
+  "voice": "zh-HK-HiuMaanNeural",
+  "expect": "flag",
+  "why": "賣 maai6 (sell) where 買 maai5 (buy) was wanted"
+ }
+]
