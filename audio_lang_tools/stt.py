@@ -64,13 +64,14 @@ class Unavailable(RuntimeError):
 
 
 def text_of(result: dict) -> str:
-    """What a result heard: characters and letters only (no spaces or
-    punctuation), from either API's format."""
+    """What a result heard: characters, letters and digits (no spaces or
+    punctuation, but a . or : between digits stays: 1.1 is 一點一), from
+    either API's format."""
     if 'NBest' in result or 'RecognitionStatus' in result:
         text = ((result.get('NBest') or [{}])[0].get('Lexical') or '')
     else:
         text = ''.join(p.get('text', '') for p in result.get('combinedPhrases', []))
-    return re.sub(r'[^\w]', '', text)
+    return re.sub(r'(?<!\d)[.:]|[.:](?!\d)|[^\w.:]', '', text)
 
 
 def heard(path, offline: bool = False) -> str | None:

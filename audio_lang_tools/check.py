@@ -91,10 +91,12 @@ class Checker:
                 sys.stderr.write(f'\nspeech-to-text unavailable ({err}); word checks use cached results only from here on\n')
         r['words'] = heard is not None
         if heard is not None:
-            heard_jp = [j for j in lang.to_jyutping(heard) if j]
-            r['heard'], r['heard_jyutping'] = heard, ' '.join(heard_jp)
+            readings = lang.heard_readings(heard)
+            r['heard'], r['heard_jyutping'] = heard, ' '.join(readings[0]) if readings else ''
             want_han = ''.join(c for c in item['text'] if '㐀' <= c <= '鿿')
-            if heard != want_han and [lang.base(s) for s in heard_jp] != [lang.base(s) for s in sylls]:
+            # The same characters, or the same syllables ignoring tone
+            # (digits read every way they can be).
+            if heard != want_han and [lang.base(s) for s in sylls] not in readings:
                 r['notes'].append(f"speech-to-text heard {heard or 'nothing'} {r['heard_jyutping']}")
 
         r['calibrated'] = self.model.knows(voice)

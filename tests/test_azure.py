@@ -18,3 +18,9 @@ def test_heard_text_from_either_api():
     assert stt.text_of({'RecognitionStatus': 'Success', 'NBest': [{'Lexical': '飲 茶'}]}) == '飲茶'
     assert stt.text_of({'combinedPhrases': [{'text': '飲茶。'}]}) == '飲茶'
     assert stt.text_of({'RecognitionStatus': 'NoMatch'}) == ''
+
+
+def test_heard_text_keeps_decimal_points():
+    from audio_lang_tools import stt
+    assert stt.text_of({'combinedPhrases': [{'text': '1.1個字。'}]}) == '1.1個字'
+    assert stt.text_of({'combinedPhrases': [{'text': '3:30，好。'}]}) == '3:30好'

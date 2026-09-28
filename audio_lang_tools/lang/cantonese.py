@@ -98,6 +98,77 @@ def syllable_frequency() -> Counter:
     return freq
 
 
+# Speech-to-text writes numbers as digits ("4蚊半", "1.1個字" for 一點一個字),
+# so a heard text is compared with every way its digits can be read.
+DIGIT = ['ling', 'jat', 'ji', 'saam', 'sei', 'ng', 'luk', 'cat', 'baat', 'gau']
+
+
+def _below_10000(n: int) -> list[list[str]]:
+    """Toneless readings of 1–9999: 二 or 兩 before a place, 廿 / 卅 for
+    20s / 30s, 十 alone for 10–19, and 零 filling gaps."""
+    if n < 10:
+        return [[DIGIT[n]]] + ([['loeng']] if n == 2 else [])
+    out = []
+    for place, name in ((1000, 'cin'), (100, 'baak'), (10, 'sap')):
+        if n >= place:
+            head, rest = divmod(n, place)
+            heads = [[DIGIT[head]]] + ([['loeng']] if head == 2 and place > 10 else [])
+            if place == 10 and head == 1:
+                heads = [[], ['jat']]
+            fronts = [h + [name] for h in heads]
+            if place == 10 and head == 2 and rest:
+                fronts.append(['jaa'])    # 廿一
+            if place == 10 and head == 3 and rest:
+                fronts.append(['saa'])    # 卅一
+            if not rest:
+                return fronts
+            gap = rest < place // 10
+            tails = _below_10000(rest)
+            for f in fronts:
+                for t in tails:
+                    out.append(f + (['ling'] if gap else []) + t)
+                    if not gap and place == 100 and rest % 10 == 0:
+                        out.append(f + t[:1])   # 百五 for 150
+            return out
+    return out
+
+
+def number_readings(token: str) -> list[list[str]]:
+    """Toneless syllables for a run of digits as speech-to-text writes it:
+    an integer, or two numbers joined by . or : (點: 1.1 → 一點一)."""
+    for sep in '.:':
+        if sep in token:
+            a, b = token.split(sep, 1)
+            return [x + ['dim'] + y for x in number_readings(a) for y in number_readings(b)] if a and b else []
+    if not token.isdigit():
+        return []
+    n = int(token)
+    if n == 0:
+        return [['ling']]
+    if n < 10000:
+        return _below_10000(n)
+    high, low = divmod(n, 10000)
+    if high >= 10000:
+        return [[DIGIT[int(d)] for d in token]]
+    lows = [[]] if not low else [(['ling'] if low < 1000 else []) + r for r in _below_10000(low)]
+    return [h + ['maan'] + l for h in _below_10000(high) for l in lows]
+
+
+def heard_readings(text: str, limit: int = 64) -> list[list[str]]:
+    """Every toneless syllable sequence a heard text can stand for (digits
+    read every way they can be), at most `limit` of them."""
+    import itertools
+    import re
+    parts = []
+    for tok in re.findall(r'\d+(?:[.:]\d+)?|.', text):
+        if tok[0].isdigit():
+            parts.append(number_readings(tok) or [[tok]])
+        else:
+            jp = to_jyutping(tok)[0] if '㐀' <= tok <= '鿿' else None
+            parts.append([[base(jp)]] if jp else [[tok.lower()]])
+    return [sum(combo, []) for combo in itertools.islice(itertools.product(*parts), limit)]
+
+
 def char_read_as(syll: str) -> str | None:
     """A common character whose usual reading is `syll`, so a voice reading
     it from text most likely says `syll` (琴 for kam4), or None."""
