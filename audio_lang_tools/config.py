@@ -6,9 +6,17 @@ config file of KEY=value lines: $ALTOOLS_CONFIG, else
 ~/.config/audio-lang-tools/config.env. Never commit or print a key.
 
     AZURE_SPEECH_KEY, AZURE_SPEECH_REGION   Azure Speech (STT, and TTS for the benchmark)
+
+Azure costs money (free credits run out), so each run may make at most
+ALTOOLS_AZURE_BUDGET new, uncached requests (default 1000: enough to
+check a whole site; rebuilding the benchmark needs about 12,000 and must
+raise it on purpose). spend() counts them; usage() reports them.
 """
+import atexit
 import os
 import re
+import sys
+from collections import Counter
 from pathlib import Path
 
 CACHE = Path(os.environ.get('ALTOOLS_CACHE', Path.home() / '.cache/audio-lang-tools'))
@@ -42,3 +50,29 @@ def secret(name: str, required: bool = True) -> str | None:
 
 def azure() -> tuple[str, str]:
     return secret('AZURE_SPEECH_KEY'), secret('AZURE_SPEECH_REGION')
+
+
+class BudgetExceeded(RuntimeError):
+    """This run has made its ALTOOLS_AZURE_BUDGET of new Azure requests."""
+
+
+_spent = Counter()
+_audio_secs = [0.0]
+
+
+def spend(kind: str, audio_secs: float = 0.0):
+    """Count one new (uncached) Azure request of `kind` ('tts' or 'stt'),
+    or raise BudgetExceeded if the run's budget is used up."""
+    budget = int(os.environ.get('ALTOOLS_AZURE_BUDGET', '1000'))
+    if sum(_spent.values()) >= budget:
+        raise BudgetExceeded(f'{budget} new Azure requests in this run (ALTOOLS_AZURE_BUDGET); '
+                             'raise it on purpose to go on')
+    _spent[kind] += 1
+    _audio_secs[0] += audio_secs
+
+
+@atexit.register
+def usage():
+    if _spent:
+        sys.stderr.write(f"Azure: {_spent['tts']} new TTS and {_spent['stt']} new speech-to-text requests "
+                         f"({_audio_secs[0] / 60:.1f} min of audio) in this run; cached results cost nothing.\n")

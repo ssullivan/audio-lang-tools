@@ -24,11 +24,16 @@ def recognize(path, offline: bool = False) -> dict | None:
     if offline:
         return None
     key, region = config.azure()
+    body = wav(path)
+    try:
+        config.spend('stt', (len(body) - 44) / 32000)  # 16 kHz 16-bit mono after a 44-byte header
+    except config.BudgetExceeded as err:
+        raise Unavailable(str(err)) from err
     url = (f'https://{region}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1'
            '?language=zh-HK&format=detailed')
     for attempt in range(6):
         try:
-            res = requests.post(url, data=wav(path), timeout=60, headers={
+            res = requests.post(url, data=body, timeout=60, headers={
                 'Ocp-Apim-Subscription-Key': key, 'Accept': 'application/json',
                 'Content-Type': 'audio/wav; codecs=audio/pcm; samplerate=16000'})
         except requests.ConnectionError:

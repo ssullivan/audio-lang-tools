@@ -37,6 +37,7 @@ def say(body: str, voice: str) -> bytes:
     if path.exists():
         return path.read_bytes()
     key, region = config.azure()
+    config.spend('tts')
     for attempt in range(6):
         res = requests.post(f'https://{region}.tts.speech.microsoft.com/cognitiveservices/v1', data=request.encode(), headers={
             'Ocp-Apim-Subscription-Key': key, 'Content-Type': 'application/ssml+xml',

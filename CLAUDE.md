@@ -29,6 +29,7 @@ experiments/        tried ideas, with their results in the docstring
 - Tune on the train split only (`bench train` picks thresholds from cross-validated predictions). The test split is for scoring.
 - Tests must be able to fail: after writing one, break the code on purpose and confirm it fails.
 - Keys: `AZURE_SPEECH_KEY`, `AZURE_SPEECH_REGION` from the environment or `~/.config/audio-lang-tools/config.env` (or `$ALTOOLS_CONFIG`). Never put a key in any file in the repo, never print one. `tests/test_no_keys.py` fails if a file holds one.
+- Azure costs the user money: each run makes at most `ALTOOLS_AZURE_BUDGET` new (uncached) requests, default 1000, and reports what it used. Rebuilding the benchmark needs about 12,000 TTS requests plus ~3,000 speech-to-text on scoring: ask the user before raising the budget for that. Never delete the cache (`~/.cache/audio-lang-tools/tts`, `stt`): it is what makes reruns free.
 - Generated things (models, Azure results, benchmark clips, analysis) live in `~/.cache/audio-lang-tools` (`$ALTOOLS_CACHE`), never in the repo.
 - Adding a language: a `lang/<name>.py` with the same functions as `lang/cantonese.py`, its own fixtures and thresholds.
 
