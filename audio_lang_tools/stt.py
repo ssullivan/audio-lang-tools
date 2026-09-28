@@ -15,11 +15,14 @@ from . import config
 from .audio import wav
 
 
-def recognize(path) -> dict:
+def recognize(path, offline: bool = False) -> dict | None:
+    """Azure's detailed result; with offline, only a cached one (else None)."""
     data = open(path, 'rb').read()
     cached = config.cache('stt') / (hashlib.sha1(data).hexdigest() + '.json')
     if cached.exists():
         return json.loads(cached.read_text())
+    if offline:
+        return None
     key, region = config.azure()
     url = (f'https://{region}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1'
            '?language=zh-HK&format=detailed')
@@ -34,15 +37,24 @@ def recognize(path) -> dict:
         if res.ok:
             cached.write_text(res.text)
             return res.json()
+        if 'quota' in res.text.lower() or res.status_code == 403:
+            raise Unavailable(f'Azure STT {res.status_code}: {res.text[:120]}')
         # Azure now and then answers 401 to a burst of requests; retry that too.
         if res.status_code in (401, 429) or res.status_code >= 500:
             time.sleep(2 * 2 ** attempt)
             continue
         raise RuntimeError(f'Azure STT {res.status_code}: {res.text[:200]}')
-    raise RuntimeError('Azure STT: too many retries')
+    raise Unavailable('Azure STT: too many retries')
 
 
-def heard(path) -> str:
-    r = recognize(path)
+class Unavailable(RuntimeError):
+    """Speech-to-text can't be used now (quota used up, no access)."""
+
+
+def heard(path, offline: bool = False) -> str | None:
+    """What speech-to-text heard (no spaces), or None if offline and not cached."""
+    r = recognize(path, offline)
+    if r is None:
+        return None
     best = (r.get('NBest') or [{}])[0]
     return (best.get('Lexical') or '').replace(' ', '')

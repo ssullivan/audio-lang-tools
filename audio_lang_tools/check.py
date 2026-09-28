@@ -5,11 +5,15 @@
       calibrated, tones: [{ syll, want, heard, p, probs }] }
 
 problems are likely wrong (CHECK); notes are worth a listen (LISTEN).
+words is False when the word check was skipped: no text, or speech-to-text
+unavailable (quota used up: the rest of the run uses cached results only,
+and says so once on stderr).
 
 Alignment and pitch are cached per clip (by content hash), so a rerun
 only analyses new or changed clips.
 """
 import hashlib
+import sys
 
 import numpy as np
 
@@ -64,6 +68,7 @@ class Checker:
         self.model = model or Model.load()
         self.analyser = Analyser()
         self.words = words
+        self.stt_offline = False
 
     def check(self, item):
         sylls = lang.syllables(item['jyutping'])
@@ -77,8 +82,15 @@ class Checker:
         r['secs'] = round(float(a['secs']), 2)
         r['problems'] += list(a['problems'])
 
+        heard = None
         if self.words and item.get('text') and r['secs'] > 0:
-            heard = stt.heard(item['path'])
+            try:
+                heard = stt.heard(item['path'], offline=self.stt_offline)
+            except stt.Unavailable as err:
+                self.stt_offline = True
+                sys.stderr.write(f'\nspeech-to-text unavailable ({err}); word checks use cached results only from here on\n')
+        r['words'] = heard is not None
+        if heard is not None:
             heard_jp = [j for j in lang.to_jyutping(heard) if j]
             r['heard'], r['heard_jyutping'] = heard, ' '.join(heard_jp)
             want_han = ''.join(c for c in item['text'] if '㐀' <= c <= '鿿')
